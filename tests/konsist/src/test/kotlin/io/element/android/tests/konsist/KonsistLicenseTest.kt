@@ -44,6 +44,7 @@ class KonsistLicenseTest {
             .files
             .filter {
                 it.path.contains("/enterprise/features").not() &&
+                    it.path.contains("/fr/gouv/tchap/").not() &&
                     it.nameWithExtension != "locales.kt" &&
                     it.name.startsWith("Template ").not()
             }

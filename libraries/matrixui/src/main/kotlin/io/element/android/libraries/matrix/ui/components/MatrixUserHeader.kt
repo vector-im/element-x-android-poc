@@ -32,6 +32,7 @@ import io.element.android.libraries.matrix.ui.model.getBestName
 
 @Composable
 fun MatrixUserHeader(
+    isDebugBuild: Boolean,
     matrixUser: MatrixUser?,
     modifier: Modifier = Modifier,
     // TODO handle click on this item, to let the user be able to update their profile.
@@ -41,6 +42,7 @@ fun MatrixUserHeader(
         MatrixUserHeaderPlaceholder(modifier = modifier)
     } else {
         MatrixUserHeaderContent(
+            isDebugBuild = isDebugBuild,
             matrixUser = matrixUser,
             modifier = modifier,
             // onClick = onClick
@@ -50,6 +52,7 @@ fun MatrixUserHeader(
 
 @Composable
 private fun MatrixUserHeaderContent(
+    isDebugBuild: Boolean,
     matrixUser: MatrixUser,
     modifier: Modifier = Modifier,
     // onClick: () -> Unit,
@@ -80,7 +83,7 @@ private fun MatrixUserHeaderContent(
                 color = ElementTheme.materialColors.primary,
             )
             // Id
-            if (matrixUser.displayName.isNullOrEmpty().not()) {
+            if (isDebugBuild && matrixUser.displayName.isNullOrEmpty().not()) { // TCHAP hide the Matrix Id in release mode
                 Text(
                     text = matrixUser.userId.value,
                     style = ElementTheme.typography.fontBodyMdRegular,
@@ -96,5 +99,5 @@ private fun MatrixUserHeaderContent(
 @PreviewsDayNight
 @Composable
 internal fun MatrixUserHeaderPreview(@PreviewParameter(MatrixUserProvider::class) matrixUser: MatrixUser) = ElementPreview {
-    MatrixUserHeader(matrixUser)
+    MatrixUserHeader(isDebugBuild = false, matrixUser)
 }

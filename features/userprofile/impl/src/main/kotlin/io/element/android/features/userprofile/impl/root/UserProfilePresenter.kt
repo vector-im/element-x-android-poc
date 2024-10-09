@@ -26,6 +26,7 @@ import io.element.android.libraries.architecture.AsyncAction
 import io.element.android.libraries.architecture.AsyncData
 import io.element.android.libraries.architecture.Presenter
 import io.element.android.libraries.core.bool.orFalse
+import io.element.android.libraries.core.meta.BuildMeta
 import io.element.android.libraries.matrix.api.MatrixClient
 import io.element.android.libraries.matrix.api.core.RoomId
 import io.element.android.libraries.matrix.api.core.UserId
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
 
 class UserProfilePresenter @AssistedInject constructor(
     @Assisted private val userId: UserId,
+    private val buildMeta: BuildMeta,
     private val client: MatrixClient,
     private val startDMAction: StartDMAction,
 ) : Presenter<UserProfileState> {
@@ -104,6 +106,7 @@ class UserProfilePresenter @AssistedInject constructor(
         }
 
         return UserProfileState(
+            isDebugBuild = buildMeta.isDebuggable,
             userId = userId,
             userName = userProfile?.displayName,
             avatarUrl = userProfile?.avatarUrl,

@@ -67,6 +67,7 @@ import io.element.android.libraries.matrix.api.media.MediaSource
 import io.element.android.libraries.matrix.api.user.MatrixUser
 import io.element.android.libraries.matrix.ui.media.MediaRequestData
 import io.element.android.libraries.matrix.ui.model.getAvatarData
+import io.element.android.libraries.matrix.ui.model.getBestName
 import kotlinx.coroutines.launch
 
 internal val REACTION_SUMMARY_LINE_HEIGHT = 25.sp
@@ -146,8 +147,10 @@ private fun SheetContent(
                     val user = sender.user ?: MatrixUser(userId = sender.senderId)
 
                     SenderRow(
+                        isDebugBuild = summary.isDebugBuild,
                         avatarData = user.getAvatarData(AvatarSize.UserListItem),
-                        name = user.displayName ?: user.userId.value,
+                        // TCHAP TODO should be applied in Element X
+                        name = user.getBestName(),
                         userId = user.userId.value,
                         sentTime = sender.sentTime
                     )
@@ -223,6 +226,7 @@ private fun AggregatedReactionButton(
 
 @Composable
 private fun SenderRow(
+    isDebugBuild: Boolean,
     avatarData: AvatarData,
     name: String,
     userId: String,
@@ -261,13 +265,15 @@ private fun SenderRow(
                     style = ElementTheme.typography.fontBodySmRegular,
                 )
             }
-            Text(
-                text = userId,
-                color = MaterialTheme.colorScheme.secondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = ElementTheme.typography.fontBodySmRegular,
-            )
+            if (isDebugBuild) { // TCHAP hide the Matrix Id in release mode
+                Text(
+                    text = userId,
+                    color = MaterialTheme.colorScheme.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = ElementTheme.typography.fontBodySmRegular,
+                )
+            }
         }
     }
 }

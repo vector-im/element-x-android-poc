@@ -120,6 +120,7 @@ fun aMessagesState(
     pinnedMessagesBannerState: PinnedMessagesBannerState = aLoadedPinnedMessagesBannerState(),
     eventSink: (MessagesEvents) -> Unit = {},
 ) = MessagesState(
+    isDebugBuild = false,
     roomId = RoomId("!id:domain"),
     roomName = roomName,
     roomAvatar = roomAvatar,
@@ -181,6 +182,7 @@ fun aReadReceiptBottomSheetState(
     selectedEvent: TimelineItem.Event? = null,
     eventSink: (ReadReceiptBottomSheetEvents) -> Unit = {},
 ) = ReadReceiptBottomSheetState(
+    isDebugBuild = false,
     selectedEvent = selectedEvent,
     eventSink = eventSink,
 )

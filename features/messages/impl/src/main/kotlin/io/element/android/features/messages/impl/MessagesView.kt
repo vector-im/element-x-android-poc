@@ -444,6 +444,7 @@ private fun MessagesViewComposerBottomSheetContents(
                             return available
                         }
                     }),
+                isDebugBuild = state.isDebugBuild,
                 roomId = state.roomId,
                 roomName = state.roomName.dataOrNull(),
                 roomAvatarData = state.roomAvatar.dataOrNull(),

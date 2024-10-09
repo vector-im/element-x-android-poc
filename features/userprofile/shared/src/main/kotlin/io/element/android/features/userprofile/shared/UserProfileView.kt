@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import fr.gouv.tchap.android.libraries.matrix.api.core.toDisplayName
 import io.element.android.features.userprofile.shared.blockuser.BlockUserDialogs
 import io.element.android.features.userprofile.shared.blockuser.BlockUserSection
 import io.element.android.libraries.designsystem.components.async.AsyncActionView
@@ -57,12 +58,14 @@ fun UserProfileView(
                 .consumeWindowInsets(padding)
                 .verticalScroll(rememberScrollState())
         ) {
+            // TCHAP display a value generated from userId if displayname does not exist
             UserProfileHeaderSection(
+                isDebugBuild = state.isDebugBuild,
                 avatarUrl = state.avatarUrl,
                 userId = state.userId,
-                userName = state.userName,
+                userName = state.userName ?: state.userId.toDisplayName(),
                 openAvatarPreview = { avatarUrl ->
-                    openAvatarPreview(state.userName ?: state.userId.value, avatarUrl)
+                    openAvatarPreview(state.userName ?: state.userId.toDisplayName(), avatarUrl)
                 },
             )
 
