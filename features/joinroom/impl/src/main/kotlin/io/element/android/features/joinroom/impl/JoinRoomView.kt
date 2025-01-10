@@ -47,7 +47,6 @@ import io.element.android.libraries.designsystem.atomic.molecules.IconTitleSubti
 import io.element.android.libraries.designsystem.atomic.molecules.RoomPreviewMembersCountMolecule
 import io.element.android.libraries.designsystem.atomic.organisms.RoomPreviewOrganism
 import io.element.android.libraries.designsystem.atomic.pages.HeaderFooterPage
-import io.element.android.libraries.designsystem.background.LightGradientBackground
 import io.element.android.libraries.designsystem.components.BigIcon
 import io.element.android.libraries.designsystem.components.async.AsyncActionView
 import io.element.android.libraries.designsystem.components.avatar.Avatar
@@ -80,7 +79,6 @@ fun JoinRoomView(
     Box(
         modifier = modifier.fillMaxSize(),
     ) {
-        LightGradientBackground()
         HeaderFooterPage(
             containerColor = Color.Transparent,
             paddingValues = PaddingValues(16.dp),
