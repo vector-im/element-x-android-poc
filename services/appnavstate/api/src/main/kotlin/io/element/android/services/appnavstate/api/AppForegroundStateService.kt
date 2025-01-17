@@ -18,8 +18,16 @@ interface AppForegroundStateService {
      */
     val isInForeground: StateFlow<Boolean>
 
+    val isInCall: StateFlow<Boolean>
+
+    val isSyncingNotificationEvent: StateFlow<Boolean>
+
     /**
      * Start observing the foreground state.
      */
-    fun start()
+    fun startObservingForeground()
+
+    fun updateIsInCallState(isInCall: Boolean)
+
+    fun updateIsSyncingNotificationEvent(isSyncingNotificationEvent: Boolean)
 }

@@ -17,7 +17,7 @@ class FakeAppForegroundStateService(
     private val state = MutableStateFlow(initialValue)
     override val isInForeground: StateFlow<Boolean> = state
 
-    override fun start() {
+    override fun startObservingForeground() {
         // No-op
     }
 

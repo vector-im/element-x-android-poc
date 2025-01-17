@@ -40,6 +40,7 @@ dependencies {
     implementation(projects.libraries.push.api)
     implementation(projects.libraries.uiStrings)
     implementation(projects.services.analytics.api)
+    implementation(projects.services.appnavstate.api)
     implementation(projects.services.toolbox.api)
     implementation(libs.androidx.webkit)
     implementation(libs.coil.compose)

@@ -32,8 +32,6 @@ class SyncOnNotifiableEvent @Inject constructor(
     private val appForegroundStateService: AppForegroundStateService,
     private val dispatchers: CoroutineDispatchers,
 ) {
-    private var syncCounter = AtomicInteger(0)
-
     suspend operator fun invoke(notifiableEvent: NotifiableEvent) = withContext(dispatchers.io) {
         val isRingingCallEvent = notifiableEvent is NotifiableRingingCallEvent
         if (!featureFlagService.isFeatureEnabled(FeatureFlags.SyncOnPush) && !isRingingCallEvent) {
@@ -45,14 +43,13 @@ class SyncOnNotifiableEvent @Inject constructor(
 
             // If the app is in foreground, sync is already running, so just add the subscription.
             if (!appForegroundStateService.isInForeground.value) {
-                val syncService = client.syncService()
-                syncService.startSyncIfNeeded()
                 if (isRingingCallEvent) {
                     room.waitsUntilUserIsInTheCall(timeout = 60.seconds)
                 } else {
+                    appForegroundStateService.updateIsInCallState(true)
                     room.waitsUntilEventIsKnown(eventId = notifiableEvent.eventId, timeout = 10.seconds)
+                    appForegroundStateService.updateIsInCallState(false)
                 }
-                syncService.stopSyncIfNeeded()
             }
         }
     }
@@ -79,18 +76,6 @@ class SyncOnNotifiableEvent @Inject constructor(
                     }
                 }
             }
-        }
-    }
-
-    private suspend fun SyncService.startSyncIfNeeded() {
-        if (syncCounter.getAndIncrement() == 0) {
-            startSync()
-        }
-    }
-
-    private suspend fun SyncService.stopSyncIfNeeded() {
-        if (syncCounter.decrementAndGet() == 0 && !appForegroundStateService.isInForeground.value) {
-            stopSync()
         }
     }
 }
