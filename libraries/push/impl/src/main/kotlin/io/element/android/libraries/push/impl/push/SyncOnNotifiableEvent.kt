@@ -13,7 +13,6 @@ import io.element.android.libraries.featureflag.api.FeatureFlags
 import io.element.android.libraries.matrix.api.MatrixClientProvider
 import io.element.android.libraries.matrix.api.core.EventId
 import io.element.android.libraries.matrix.api.room.MatrixRoom
-import io.element.android.libraries.matrix.api.sync.SyncService
 import io.element.android.libraries.matrix.api.timeline.MatrixTimelineItem
 import io.element.android.libraries.push.impl.notifications.model.NotifiableEvent
 import io.element.android.libraries.push.impl.notifications.model.NotifiableRingingCallEvent
@@ -21,7 +20,6 @@ import io.element.android.services.appnavstate.api.AppForegroundStateService
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -41,14 +39,17 @@ class SyncOnNotifiableEvent @Inject constructor(
         client.getRoom(notifiableEvent.roomId)?.use { room ->
             room.subscribeToSync()
 
-            // If the app is in foreground, sync is already running, so just add the subscription.
+            // If the app is in foreground, sync is already running, so we just add the subscription above.
             if (!appForegroundStateService.isInForeground.value) {
                 if (isRingingCallEvent) {
                     room.waitsUntilUserIsInTheCall(timeout = 60.seconds)
                 } else {
-                    appForegroundStateService.updateIsSyncingNotificationEvent(true)
-                    room.waitsUntilEventIsKnown(eventId = notifiableEvent.eventId, timeout = 10.seconds)
-                    appForegroundStateService.updateIsSyncingNotificationEvent(false)
+                    try {
+                        appForegroundStateService.updateIsSyncingNotificationEvent(true)
+                        room.waitsUntilEventIsKnown(eventId = notifiableEvent.eventId, timeout = 10.seconds)
+                    } finally {
+                        appForegroundStateService.updateIsSyncingNotificationEvent(false)
+                    }
                 }
             }
         }

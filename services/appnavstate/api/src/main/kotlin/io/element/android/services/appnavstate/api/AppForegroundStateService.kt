@@ -18,8 +18,14 @@ interface AppForegroundStateService {
      */
     val isInForeground: StateFlow<Boolean>
 
+    /**
+     * Updates to whether the app is in an active call or not will be emitted here.
+     */
     val isInCall: StateFlow<Boolean>
 
+    /**
+     * Updates to whether the app is syncing a notification event or not will be emitted here.
+     */
     val isSyncingNotificationEvent: StateFlow<Boolean>
 
     /**
@@ -27,7 +33,13 @@ interface AppForegroundStateService {
      */
     fun startObservingForeground()
 
+    /**
+     * Update the in-call state.
+     */
     fun updateIsInCallState(isInCall: Boolean)
 
+    /**
+     * Update the active state for the syncing notification event flow.
+     */
     fun updateIsSyncingNotificationEvent(isSyncingNotificationEvent: Boolean)
 }

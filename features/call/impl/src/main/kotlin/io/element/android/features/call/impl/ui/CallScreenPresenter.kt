@@ -59,7 +59,6 @@ class CallScreenPresenter @AssistedInject constructor(
     private val dispatchers: CoroutineDispatchers,
     private val matrixClientsProvider: MatrixClientProvider,
     private val screenTracker: ScreenTracker,
-    private val appCoroutineScope: CoroutineScope,
     private val activeCallManager: ActiveCallManager,
     private val languageTagProvider: LanguageTagProvider,
     private val appForegroundStateService: AppForegroundStateService,
@@ -233,13 +232,9 @@ class CallScreenPresenter @AssistedInject constructor(
                     }
             }
             onDispose {
-                // We can't use the local coroutine scope here because it will be disposed before this effect
-                appCoroutineScope.launch {
-                    client.syncService().run {
-                        if (syncState.value == SyncState.Running) {
-                            appForegroundStateService.updateIsInCallState(false)
-                        }
-                    }
+                // Make sure we mark the call as ended in the app state
+                if (appForegroundStateService.isInCall.value) {
+                    appForegroundStateService.updateIsInCallState(false)
                 }
             }
         }

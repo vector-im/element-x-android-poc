@@ -30,6 +30,9 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Observes the app state and network state to start/stop the sync service.
+ */
 @SingleIn(SessionScope::class)
 class SyncObserver @Inject constructor(
     matrixClient: MatrixClient,
@@ -42,13 +45,16 @@ class SyncObserver @Inject constructor(
 
     private val initialSyncMutex = Mutex()
 
+    /**
+     * Observe the app state and network state to start/stop the sync service.
+     *
+     * Before observing the state, a first attempt at starting the sync service will happen if it's not already running.
+     */
     @OptIn(FlowPreview::class)
     fun observe() {
-        val coroutineScope = CoroutineScope(sessionCoroutineScope.coroutineContext + dispatchers.io)
-
         if (syncService.syncState.value != SyncState.Running) {
             Timber.d("SyncObserver: initial startSync")
-            coroutineScope.launch {
+            sessionCoroutineScope.launch(dispatchers.io) {
                 try {
                     initialSyncMutex.lock()
                     syncService.startSync()
@@ -61,7 +67,7 @@ class SyncObserver @Inject constructor(
             }
         }
 
-        coroutineScope.launch {
+        sessionCoroutineScope.launch(dispatchers.io) {
             // Wait until the initial sync is done, either successfully or failing
             initialSyncMutex.lock()
 
@@ -76,7 +82,6 @@ class SyncObserver @Inject constructor(
                 val isAppActive = isInForeground || isInCall || isSyncingNotificationEvent
                 val isNetworkAvailable = networkState == NetworkStatus.Online
 
-                Timber.d("SyncObserver: syncState=$syncState, networkState=$networkState, isInForeground=$isInForeground, isInCall=$isInCall, isSyncingNotificationEvent=$isSyncingNotificationEvent")
                 Timber.d("SyncObserver: isAppActive=$isAppActive, isNetworkAvailable=$isNetworkAvailable")
                 if (syncState == SyncState.Running && (!isAppActive || !isNetworkAvailable)) {
                     delay(3.seconds)
@@ -91,11 +96,9 @@ class SyncObserver @Inject constructor(
                 .collect { action ->
                     when (action) {
                         SyncObserverAction.StartSync -> {
-                            Timber.d("SyncObserver: startSync")
                             syncService.startSync()
                         }
                         SyncObserverAction.StopSync -> {
-                            Timber.d("SyncObserver: stopSync")
                             syncService.stopSync()
                         }
                         SyncObserverAction.NoOp -> Unit
