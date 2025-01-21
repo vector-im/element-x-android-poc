@@ -46,9 +46,9 @@ class SyncOnNotifiableEvent @Inject constructor(
                 if (isRingingCallEvent) {
                     room.waitsUntilUserIsInTheCall(timeout = 60.seconds)
                 } else {
-                    appForegroundStateService.updateIsInCallState(true)
+                    appForegroundStateService.updateIsSyncingNotificationEvent(true)
                     room.waitsUntilEventIsKnown(eventId = notifiableEvent.eventId, timeout = 10.seconds)
-                    appForegroundStateService.updateIsInCallState(false)
+                    appForegroundStateService.updateIsSyncingNotificationEvent(false)
                 }
             }
         }
