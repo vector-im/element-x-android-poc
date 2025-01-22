@@ -36,7 +36,7 @@ import kotlin.time.Duration.Companion.seconds
  * Observes the app state and network state to start/stop the sync service.
  */
 @SingleIn(SessionScope::class)
-class SyncObserver @Inject constructor(
+class SyncOrchestrator @Inject constructor(
     matrixClient: MatrixClient,
     private val appForegroundStateService: AppForegroundStateService,
     private val networkMonitor: NetworkMonitor,
@@ -49,15 +49,15 @@ class SyncObserver @Inject constructor(
 
     private var coroutineScope: CoroutineScope? = null
 
-    private val tag = "SyncObserver"
+    private val tag = "SyncOrchestrator"
 
     /**
-     * Observe the app state and network state to start/stop the sync service.
+     * Starting observing the app state and network state to start/stop the sync service.
      *
      * Before observing the state, a first attempt at starting the sync service will happen if it's not already running.
      */
     @OptIn(FlowPreview::class)
-    fun observe() {
+    fun start() {
         Timber.tag(tag).d("start observing the app and network state")
 
         if (syncService.syncState.value != SyncState.Running) {

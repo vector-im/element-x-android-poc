@@ -29,7 +29,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SyncObserverTest {
+class SyncOrchestratorTest {
     @get:Rule
     val warmUpRule = WarmUpRule()
 
@@ -41,10 +41,10 @@ class SyncObserverTest {
             startSyncLambda = startSyncRecorder
         }
         val networkMonitor = FakeNetworkMonitor(initialStatus = NetworkStatus.Offline)
-        val syncObserver = createSyncObserver(syncService, networkMonitor)
+        val syncOrchestrator = createSyncOrchestrator(syncService, networkMonitor)
 
         // We start observing
-        syncObserver.observe()
+        syncOrchestrator.start()
 
         // Advance the time to make sure we left the initial sync behind
         advanceTimeBy(1.seconds)
@@ -53,7 +53,7 @@ class SyncObserverTest {
         startSyncRecorder.assertions().isCalledOnce()
 
         // Stop observing
-        syncObserver.stop()
+        syncOrchestrator.stop()
     }
 
     @Test
@@ -65,10 +65,10 @@ class SyncObserverTest {
         }
         val networkMonitor = FakeNetworkMonitor(initialStatus = NetworkStatus.Online)
         val appForegroundStateService = FakeAppForegroundStateService(initialForegroundValue = true)
-        val syncObserver = createSyncObserver(syncService, networkMonitor, appForegroundStateService)
+        val syncOrchestrator = createSyncOrchestrator(syncService, networkMonitor, appForegroundStateService)
 
         // We start observing, we skip the initial sync attempt since the state is running
-        syncObserver.observe()
+        syncOrchestrator.start()
 
         // Advance the time to make sure we left the initial sync behind
         advanceTimeBy(1.seconds)
@@ -85,7 +85,7 @@ class SyncObserverTest {
         stopSyncRecorder.assertions().isCalledOnce()
 
         // Stop observing
-        syncObserver.stop()
+        syncOrchestrator.stop()
     }
 
     @Test
@@ -102,10 +102,10 @@ class SyncObserverTest {
             initialForegroundValue = false,
             initialIsSyncingNotificationEventValue = false,
         )
-        val syncObserver = createSyncObserver(syncService, networkMonitor, appForegroundStateService)
+        val syncOrchestrator = createSyncOrchestrator(syncService, networkMonitor, appForegroundStateService)
 
         // We start observing, we skip the initial sync attempt since the state is running
-        syncObserver.observe()
+        syncOrchestrator.start()
 
         // Advance the time to make sure we left the initial sync behind
         advanceTimeBy(1.seconds)
@@ -133,7 +133,7 @@ class SyncObserverTest {
         stopSyncRecorder.assertions().isCalledExactly(2)
 
         // Stop observing
-        syncObserver.stop()
+        syncOrchestrator.stop()
     }
 
     @Test
@@ -150,10 +150,10 @@ class SyncObserverTest {
             initialForegroundValue = false,
             initialIsSyncingNotificationEventValue = false,
         )
-        val syncObserver = createSyncObserver(syncService, networkMonitor, appForegroundStateService)
+        val syncOrchestrator = createSyncOrchestrator(syncService, networkMonitor, appForegroundStateService)
 
         // We start observing, we skip the initial sync attempt since the state is running
-        syncObserver.observe()
+        syncOrchestrator.start()
 
         // Advance the time to make sure we left the initial sync behind
         advanceTimeBy(1.seconds)
@@ -181,7 +181,7 @@ class SyncObserverTest {
         stopSyncRecorder.assertions().isCalledExactly(2)
 
         // Stop observing
-        syncObserver.stop()
+        syncOrchestrator.stop()
     }
 
     @Test
@@ -199,10 +199,10 @@ class SyncObserverTest {
             initialIsSyncingNotificationEventValue = true,
             initialIsInCallValue = true,
         )
-        val syncObserver = createSyncObserver(syncService, networkMonitor, appForegroundStateService)
+        val syncOrchestrator = createSyncOrchestrator(syncService, networkMonitor, appForegroundStateService)
 
         // We start observing, we skip the initial sync attempt since the state is running
-        syncObserver.observe()
+        syncOrchestrator.start()
 
         // Advance the time to make sure we left the initial sync behind
         advanceTimeBy(1.seconds)
@@ -226,7 +226,7 @@ class SyncObserverTest {
         stopSyncRecorder.assertions().isCalledOnce()
 
         // Stop observing
-        syncObserver.stop()
+        syncOrchestrator.stop()
     }
 
     @Test
@@ -242,10 +242,10 @@ class SyncObserverTest {
             initialIsSyncingNotificationEventValue = true,
             initialIsInCallValue = true,
         )
-        val syncObserver = createSyncObserver(syncService, networkMonitor, appForegroundStateService)
+        val syncOrchestrator = createSyncOrchestrator(syncService, networkMonitor, appForegroundStateService)
 
         // We start observing, we skip the initial sync attempt since the state is running
-        syncObserver.observe()
+        syncOrchestrator.start()
 
         // Advance the time to make sure we left the initial sync behind
         advanceTimeBy(1.seconds)
@@ -260,7 +260,7 @@ class SyncObserverTest {
         stopSyncRecorder.assertions().isNeverCalled()
 
         // Stop observing
-        syncObserver.stop()
+        syncOrchestrator.stop()
     }
 
     @Test
@@ -271,10 +271,10 @@ class SyncObserverTest {
             startSyncLambda = startSyncRecorder
         }
         val networkMonitor = FakeNetworkMonitor(initialStatus = NetworkStatus.Offline)
-        val syncObserver = createSyncObserver(syncService, networkMonitor)
+        val syncOrchestrator = createSyncOrchestrator(syncService, networkMonitor)
 
         // We start observing, we skip the initial sync attempt since the state is running
-        syncObserver.observe()
+        syncOrchestrator.start()
 
         // Advance the time to make sure we left the initial sync behind
         advanceTimeBy(1.seconds)
@@ -287,7 +287,7 @@ class SyncObserverTest {
         startSyncRecorder.assertions().isNeverCalled()
 
         // Stop observing
-        syncObserver.stop()
+        syncOrchestrator.stop()
     }
 
     @Test
@@ -298,10 +298,10 @@ class SyncObserverTest {
             stopSyncLambda = stopSyncRecorder
         }
         val networkMonitor = FakeNetworkMonitor(initialStatus = NetworkStatus.Online)
-        val syncObserver = createSyncObserver(syncService, networkMonitor)
+        val syncOrchestrator = createSyncOrchestrator(syncService, networkMonitor)
 
         // We start observing, we skip the initial sync attempt since the state is running
-        syncObserver.observe()
+        syncOrchestrator.start()
 
         // Advance the time to make sure we left the initial sync behind
         advanceTimeBy(1.seconds)
@@ -315,14 +315,14 @@ class SyncObserverTest {
         stopSyncRecorder.assertions().isCalledOnce()
 
         // Stop observing
-        syncObserver.stop()
+        syncOrchestrator.stop()
     }
 
-    private fun TestScope.createSyncObserver(
+    private fun TestScope.createSyncOrchestrator(
         syncService: FakeSyncService = FakeSyncService(),
         networkMonitor: FakeNetworkMonitor = FakeNetworkMonitor(),
         appForegroundStateService: FakeAppForegroundStateService = FakeAppForegroundStateService(),
-    ) = SyncObserver(
+    ) = SyncOrchestrator(
         matrixClient = FakeMatrixClient(syncService = syncService),
         networkMonitor = networkMonitor,
         appForegroundStateService = appForegroundStateService,

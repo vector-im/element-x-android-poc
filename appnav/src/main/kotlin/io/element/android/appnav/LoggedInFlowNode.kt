@@ -106,7 +106,7 @@ class LoggedInFlowNode @AssistedInject constructor(
     private val logoutEntryPoint: LogoutEntryPoint,
     private val incomingVerificationEntryPoint: IncomingVerificationEntryPoint,
     private val enableNativeSlidingSyncUseCase: EnableNativeSlidingSyncUseCase,
-    private val syncObserver: SyncObserver,
+    private val syncOrchestrator: SyncOrchestrator,
     snackbarDispatcher: SnackbarDispatcher,
 ) : BaseFlowNode<LoggedInFlowNode.NavTarget>(
     backstack = BackStack(
@@ -139,7 +139,7 @@ class LoggedInFlowNode @AssistedInject constructor(
     override fun onBuilt() {
         super.onBuilt()
 
-        syncObserver.observe()
+        syncOrchestrator.start()
 
         lifecycle.subscribe(
             onCreate = {
