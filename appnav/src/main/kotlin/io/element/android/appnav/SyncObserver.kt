@@ -49,6 +49,8 @@ class SyncObserver @Inject constructor(
 
     private var coroutineScope: CoroutineScope? = null
 
+    private val tag = "SyncObserver"
+
     /**
      * Observe the app state and network state to start/stop the sync service.
      *
@@ -56,8 +58,10 @@ class SyncObserver @Inject constructor(
      */
     @OptIn(FlowPreview::class)
     fun observe() {
+        Timber.tag(tag).d("start observing the app and network state")
+
         if (syncService.syncState.value != SyncState.Running) {
-            Timber.d("SyncObserver: initial startSync")
+            Timber.tag(tag).d("initial startSync")
             sessionCoroutineScope.launch(dispatchers.io) {
                 try {
                     initialSyncMutex.lock()
@@ -71,7 +75,7 @@ class SyncObserver @Inject constructor(
             }
         }
 
-        coroutineScope = CoroutineScope(sessionCoroutineScope.coroutineContext + CoroutineName("SyncObserver") + dispatchers.io)
+        coroutineScope = CoroutineScope(sessionCoroutineScope.coroutineContext + CoroutineName(tag) + dispatchers.io)
 
         coroutineScope?.launch {
             // Wait until the initial sync is done, either successfully or failing
@@ -88,8 +92,9 @@ class SyncObserver @Inject constructor(
                 val isAppActive = isInForeground || isInCall || isSyncingNotificationEvent
                 val isNetworkAvailable = networkState == NetworkStatus.Online
 
-                Timber.d("SyncObserver: isAppActive=$isAppActive, isNetworkAvailable=$isNetworkAvailable")
+                Timber.tag(tag).d("isAppActive=$isAppActive, isNetworkAvailable=$isNetworkAvailable")
                 if (syncState == SyncState.Running && (!isAppActive || !isNetworkAvailable)) {
+                    // Don't stop the sync immediately, wait a bit to avoid starting/stopping the sync too often
                     delay(3.seconds)
                     SyncObserverAction.StopSync
                 } else if (syncState != SyncState.Running && isAppActive && isNetworkAvailable) {
@@ -117,6 +122,7 @@ class SyncObserver @Inject constructor(
      * Stop observing the app state and network state.
      */
     fun stop() {
+        Timber.tag(tag).d("stop observing the app and network state")
         coroutineScope?.cancel()
         coroutineScope = null
     }
