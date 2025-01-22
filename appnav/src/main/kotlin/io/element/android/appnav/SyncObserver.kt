@@ -16,8 +16,10 @@ import io.element.android.libraries.di.annotations.SessionCoroutineScope
 import io.element.android.libraries.matrix.api.MatrixClient
 import io.element.android.libraries.matrix.api.sync.SyncState
 import io.element.android.services.appnavstate.api.AppForegroundStateService
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -45,6 +47,8 @@ class SyncObserver @Inject constructor(
 
     private val initialSyncMutex = Mutex()
 
+    private var coroutineScope: CoroutineScope? = null
+
     /**
      * Observe the app state and network state to start/stop the sync service.
      *
@@ -67,7 +71,9 @@ class SyncObserver @Inject constructor(
             }
         }
 
-        sessionCoroutineScope.launch(dispatchers.io) {
+        coroutineScope = CoroutineScope(sessionCoroutineScope.coroutineContext + CoroutineName("SyncObserver") + dispatchers.io)
+
+        coroutineScope?.launch {
             // Wait until the initial sync is done, either successfully or failing
             initialSyncMutex.lock()
 
@@ -105,6 +111,14 @@ class SyncObserver @Inject constructor(
                     }
                 }
         }
+    }
+
+    /**
+     * Stop observing the app state and network state.
+     */
+    fun stop() {
+        coroutineScope?.cancel()
+        coroutineScope = null
     }
 }
 
