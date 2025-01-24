@@ -16,6 +16,7 @@ import io.element.android.libraries.matrix.api.MatrixClient
 import io.element.android.libraries.matrix.api.MatrixClientProvider
 import io.element.android.libraries.matrix.api.auth.MatrixAuthenticationService
 import io.element.android.libraries.matrix.api.core.SessionId
+import io.element.android.libraries.matrix.api.sync.SyncOrchestrator
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -29,13 +30,14 @@ private const val SAVE_INSTANCE_KEY = "io.element.android.x.di.MatrixClientsHold
 @ContributesBinding(AppScope::class)
 class MatrixClientsHolder @Inject constructor(
     private val authenticationService: MatrixAuthenticationService,
+    private val syncOrchestratorFactory: DefaultSyncOrchestrator.Factory,
 ) : MatrixClientProvider {
-    private val sessionIdsToMatrixClient = ConcurrentHashMap<SessionId, MatrixClient>()
+    private val sessionIdsToMatrixClient = ConcurrentHashMap<SessionId, Pair<MatrixClient, SyncOrchestrator>>()
     private val restoreMutex = Mutex()
 
     init {
         authenticationService.listenToNewMatrixClients { matrixClient ->
-            sessionIdsToMatrixClient[matrixClient.sessionId] = matrixClient
+            sessionIdsToMatrixClient[matrixClient.sessionId] = matrixClient to syncOrchestratorFactory.create(matrixClient)
         }
     }
 
@@ -48,16 +50,20 @@ class MatrixClientsHolder @Inject constructor(
     }
 
     override fun getOrNull(sessionId: SessionId): MatrixClient? {
-        return sessionIdsToMatrixClient[sessionId]
+        return sessionIdsToMatrixClient[sessionId]?.first
     }
 
     override suspend fun getOrRestore(sessionId: SessionId): Result<MatrixClient> {
         return restoreMutex.withLock {
-            when (val matrixClient = getOrNull(sessionId)) {
+            when (val cached = getOrNull(sessionId)) {
                 null -> restore(sessionId)
-                else -> Result.success(matrixClient)
+                else -> Result.success(cached)
             }
         }
+    }
+
+    internal fun getSyncOrchestratorOrNull(sessionId: SessionId): SyncOrchestrator? {
+        return sessionIdsToMatrixClient[sessionId]?.second
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -88,7 +94,7 @@ class MatrixClientsHolder @Inject constructor(
         Timber.d("Restore matrix session: $sessionId")
         return authenticationService.restoreSession(sessionId)
             .onSuccess { matrixClient ->
-                sessionIdsToMatrixClient[matrixClient.sessionId] = matrixClient
+                sessionIdsToMatrixClient[matrixClient.sessionId] = matrixClient to syncOrchestratorFactory.create(matrixClient)
             }
             .onFailure {
                 Timber.e(it, "Fail to restore session")

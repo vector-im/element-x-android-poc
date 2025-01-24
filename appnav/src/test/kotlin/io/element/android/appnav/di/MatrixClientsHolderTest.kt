@@ -9,24 +9,47 @@ package io.element.android.appnav.di
 
 import com.bumble.appyx.core.state.MutableSavedStateMapImpl
 import com.google.common.truth.Truth.assertThat
+import io.element.android.features.networkmonitor.test.FakeNetworkMonitor
+import io.element.android.libraries.matrix.api.MatrixClient
 import io.element.android.libraries.matrix.test.A_SESSION_ID
 import io.element.android.libraries.matrix.test.FakeMatrixClient
 import io.element.android.libraries.matrix.test.auth.FakeMatrixAuthenticationService
+import io.element.android.services.appnavstate.test.FakeAppForegroundStateService
+import io.element.android.tests.testutils.testCoroutineDispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class MatrixClientsHolderTest {
     @Test
-    fun `test getOrNull`() {
+    fun `test getOrNull`() = runTest {
         val fakeAuthenticationService = FakeMatrixAuthenticationService()
-        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService)
+        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService, createSyncOrchestratorFactory())
         assertThat(matrixClientsHolder.getOrNull(A_SESSION_ID)).isNull()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `test getSyncOrchestratorOrNull`() = runTest {
+        val fakeAuthenticationService = FakeMatrixAuthenticationService()
+        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService, createSyncOrchestratorFactory())
+
+        // With no matrix client there is no sync orchestrator
+        assertThat(matrixClientsHolder.getOrNull(A_SESSION_ID)).isNull()
+        assertThat(matrixClientsHolder.getSyncOrchestratorOrNull(A_SESSION_ID)).isNull()
+
+        // But as soon as we receive a client, we can get the sync orchestrator
+        val fakeMatrixClient = FakeMatrixClient()
+        fakeAuthenticationService.givenMatrixClient(fakeMatrixClient)
+        assertThat(matrixClientsHolder.getOrRestore(A_SESSION_ID).getOrNull()).isEqualTo(fakeMatrixClient)
+        assertThat(matrixClientsHolder.getSyncOrchestratorOrNull(A_SESSION_ID)).isNotNull()
     }
 
     @Test
     fun `test getOrRestore`() = runTest {
         val fakeAuthenticationService = FakeMatrixAuthenticationService()
-        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService)
+        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService, createSyncOrchestratorFactory())
         val fakeMatrixClient = FakeMatrixClient()
         fakeAuthenticationService.givenMatrixClient(fakeMatrixClient)
         assertThat(matrixClientsHolder.getOrNull(A_SESSION_ID)).isNull()
@@ -39,7 +62,7 @@ class MatrixClientsHolderTest {
     @Test
     fun `test remove`() = runTest {
         val fakeAuthenticationService = FakeMatrixAuthenticationService()
-        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService)
+        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService, createSyncOrchestratorFactory())
         val fakeMatrixClient = FakeMatrixClient()
         fakeAuthenticationService.givenMatrixClient(fakeMatrixClient)
         assertThat(matrixClientsHolder.getOrRestore(A_SESSION_ID).getOrNull()).isEqualTo(fakeMatrixClient)
@@ -52,7 +75,7 @@ class MatrixClientsHolderTest {
     @Test
     fun `test remove all`() = runTest {
         val fakeAuthenticationService = FakeMatrixAuthenticationService()
-        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService)
+        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService, createSyncOrchestratorFactory())
         val fakeMatrixClient = FakeMatrixClient()
         fakeAuthenticationService.givenMatrixClient(fakeMatrixClient)
         assertThat(matrixClientsHolder.getOrRestore(A_SESSION_ID).getOrNull()).isEqualTo(fakeMatrixClient)
@@ -65,7 +88,7 @@ class MatrixClientsHolderTest {
     @Test
     fun `test save and restore`() = runTest {
         val fakeAuthenticationService = FakeMatrixAuthenticationService()
-        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService)
+        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService, createSyncOrchestratorFactory())
         val fakeMatrixClient = FakeMatrixClient()
         fakeAuthenticationService.givenMatrixClient(fakeMatrixClient)
         matrixClientsHolder.getOrRestore(A_SESSION_ID)
@@ -85,7 +108,7 @@ class MatrixClientsHolderTest {
     @Test
     fun `test AuthenticationService listenToNewMatrixClients emits a Client value and we save it`() = runTest {
         val fakeAuthenticationService = FakeMatrixAuthenticationService()
-        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService)
+        val matrixClientsHolder = MatrixClientsHolder(fakeAuthenticationService, createSyncOrchestratorFactory())
         assertThat(matrixClientsHolder.getOrNull(A_SESSION_ID)).isNull()
 
         fakeAuthenticationService.givenMatrixClient(FakeMatrixClient(sessionId = A_SESSION_ID))
@@ -93,5 +116,17 @@ class MatrixClientsHolderTest {
 
         assertThat(loginSucceeded.isSuccess).isTrue()
         assertThat(matrixClientsHolder.getOrNull(A_SESSION_ID)).isNotNull()
+    }
+
+    private fun TestScope.createSyncOrchestratorFactory() = object : DefaultSyncOrchestrator.Factory {
+        override fun create(matrixClient: MatrixClient): DefaultSyncOrchestrator {
+            return DefaultSyncOrchestrator(
+                matrixClient,
+                baseCoroutineScope = this@createSyncOrchestratorFactory,
+                appForegroundStateService = FakeAppForegroundStateService(),
+                networkMonitor = FakeNetworkMonitor(),
+                dispatchers = testCoroutineDispatchers(),
+            )
+        }
     }
 }
