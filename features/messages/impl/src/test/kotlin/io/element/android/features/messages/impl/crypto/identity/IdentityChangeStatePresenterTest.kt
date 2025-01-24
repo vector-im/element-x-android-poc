@@ -140,7 +140,7 @@ class IdentityChangeStatePresenterTest {
             val presenter = createIdentityChangeStatePresenter(encryptionService = encryptionService)
             presenter.test {
                 val initialState = awaitItem()
-                initialState.eventSink(IdentityChangeEvent.PinViolation(A_USER_ID))
+                initialState.eventSink(IdentityChangeEvent.PinIdentity(A_USER_ID))
                 lambda.assertions().isCalledOnce().with(value(A_USER_ID))
             }
         }
@@ -155,7 +155,7 @@ class IdentityChangeStatePresenterTest {
             val presenter = createIdentityChangeStatePresenter(encryptionService = encryptionService)
             presenter.test {
                 val initialState = awaitItem()
-                initialState.eventSink(IdentityChangeEvent.VerificationViolation(A_USER_ID))
+                initialState.eventSink(IdentityChangeEvent.WithdrawVerification(A_USER_ID))
                 lambda.assertions().isCalledOnce().with(value(A_USER_ID))
             }
         }
