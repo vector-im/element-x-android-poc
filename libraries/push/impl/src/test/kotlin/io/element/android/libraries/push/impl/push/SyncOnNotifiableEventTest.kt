@@ -12,6 +12,7 @@ import com.google.common.truth.Truth.assertThat
 import io.element.android.libraries.featureflag.api.FeatureFlags
 import io.element.android.libraries.featureflag.test.FakeFeatureFlagService
 import io.element.android.libraries.matrix.api.MatrixClient
+import io.element.android.libraries.matrix.api.sync.SyncOrchestrator
 import io.element.android.libraries.matrix.api.sync.SyncState
 import io.element.android.libraries.matrix.api.timeline.MatrixTimelineItem
 import io.element.android.libraries.matrix.test.A_ROOM_ID
@@ -210,6 +211,12 @@ class SyncOnNotifiableEventTest {
             featureFlagService = featureFlagService,
             appForegroundStateService = appForegroundStateService,
             dispatchers = testCoroutineDispatchers(),
+            syncOrchestratorProvider = { client -> FakeSyncOrchestrator() }
         )
     }
+}
+
+private class FakeSyncOrchestrator : SyncOrchestrator {
+    override fun start() = Unit
+    override fun stop() = Unit
 }

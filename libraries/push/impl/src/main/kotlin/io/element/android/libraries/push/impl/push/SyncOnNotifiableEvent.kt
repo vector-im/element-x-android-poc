@@ -13,6 +13,7 @@ import io.element.android.libraries.featureflag.api.FeatureFlags
 import io.element.android.libraries.matrix.api.MatrixClientProvider
 import io.element.android.libraries.matrix.api.core.EventId
 import io.element.android.libraries.matrix.api.room.MatrixRoom
+import io.element.android.libraries.matrix.api.sync.SyncOrchestratorProvider
 import io.element.android.libraries.matrix.api.timeline.MatrixTimelineItem
 import io.element.android.libraries.push.impl.notifications.model.NotifiableEvent
 import io.element.android.libraries.push.impl.notifications.model.NotifiableRingingCallEvent
@@ -26,6 +27,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class SyncOnNotifiableEvent @Inject constructor(
     private val matrixClientProvider: MatrixClientProvider,
+    private val syncOrchestratorProvider: SyncOrchestratorProvider,
     private val featureFlagService: FeatureFlagService,
     private val appForegroundStateService: AppForegroundStateService,
     private val dispatchers: CoroutineDispatchers,
@@ -36,6 +38,10 @@ class SyncOnNotifiableEvent @Inject constructor(
             return@withContext
         }
         val client = matrixClientProvider.getOrRestore(notifiableEvent.sessionId).getOrNull() ?: return@withContext
+
+        // Start the sync if it wasn't already started
+        syncOrchestratorProvider.get(notifiableEvent.sessionId)?.start() ?: return@withContext
+
         client.getRoom(notifiableEvent.roomId)?.use { room ->
             room.subscribeToSync()
 

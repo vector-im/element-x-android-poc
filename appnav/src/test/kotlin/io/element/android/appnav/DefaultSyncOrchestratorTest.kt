@@ -7,6 +7,7 @@
 
 package io.element.android.appnav
 
+import io.element.android.appnav.di.DefaultSyncOrchestrator
 import io.element.android.features.networkmonitor.api.NetworkStatus
 import io.element.android.features.networkmonitor.test.FakeNetworkMonitor
 import io.element.android.libraries.matrix.api.sync.SyncState
@@ -29,7 +30,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SyncOrchestratorTest {
+class DefaultSyncOrchestratorTest {
     @get:Rule
     val warmUpRule = WarmUpRule()
 
@@ -322,11 +323,11 @@ class SyncOrchestratorTest {
         syncService: FakeSyncService = FakeSyncService(),
         networkMonitor: FakeNetworkMonitor = FakeNetworkMonitor(),
         appForegroundStateService: FakeAppForegroundStateService = FakeAppForegroundStateService(),
-    ) = SyncOrchestrator(
+    ) = DefaultSyncOrchestrator(
         matrixClient = FakeMatrixClient(syncService = syncService),
         networkMonitor = networkMonitor,
         appForegroundStateService = appForegroundStateService,
-        sessionCoroutineScope = CoroutineScope(coroutineContext + SupervisorJob()),
+        baseCoroutineScope = CoroutineScope(coroutineContext + SupervisorJob()),
         dispatchers = testCoroutineDispatchers(),
     )
 }

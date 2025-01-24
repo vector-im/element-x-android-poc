@@ -73,6 +73,7 @@ import io.element.android.libraries.matrix.api.core.RoomIdOrAlias
 import io.element.android.libraries.matrix.api.core.UserId
 import io.element.android.libraries.matrix.api.core.toRoomIdOrAlias
 import io.element.android.libraries.matrix.api.permalink.PermalinkData
+import io.element.android.libraries.matrix.api.sync.SyncOrchestratorProvider
 import io.element.android.libraries.matrix.api.verification.SessionVerificationRequestDetails
 import io.element.android.libraries.matrix.api.verification.SessionVerificationServiceListener
 import io.element.android.libraries.preferences.api.store.EnableNativeSlidingSyncUseCase
@@ -106,7 +107,7 @@ class LoggedInFlowNode @AssistedInject constructor(
     private val logoutEntryPoint: LogoutEntryPoint,
     private val incomingVerificationEntryPoint: IncomingVerificationEntryPoint,
     private val enableNativeSlidingSyncUseCase: EnableNativeSlidingSyncUseCase,
-    private val syncOrchestrator: SyncOrchestrator,
+    private val syncOrchestratorProvider: SyncOrchestratorProvider,
     snackbarDispatcher: SnackbarDispatcher,
 ) : BaseFlowNode<LoggedInFlowNode.NavTarget>(
     backstack = BackStack(
@@ -124,7 +125,6 @@ class LoggedInFlowNode @AssistedInject constructor(
         fun onOpenBugReport()
     }
 
-    private val syncService = matrixClient.syncService()
     private val loggedInFlowProcessor = LoggedInEventProcessor(
         snackbarDispatcher,
         matrixClient.roomMembershipObserver(),
@@ -139,7 +139,7 @@ class LoggedInFlowNode @AssistedInject constructor(
     override fun onBuilt() {
         super.onBuilt()
 
-        syncOrchestrator.start()
+        syncOrchestratorProvider.get(sessionId = matrixClient.sessionId)?.start()
 
         lifecycle.subscribe(
             onCreate = {

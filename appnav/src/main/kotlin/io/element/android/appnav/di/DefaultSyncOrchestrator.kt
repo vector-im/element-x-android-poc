@@ -5,15 +5,16 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-package io.element.android.appnav
+package io.element.android.appnav.di
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.element.android.features.networkmonitor.api.NetworkMonitor
 import io.element.android.features.networkmonitor.api.NetworkStatus
 import io.element.android.libraries.core.coroutine.CoroutineDispatchers
-import io.element.android.libraries.di.SessionScope
-import io.element.android.libraries.di.SingleIn
-import io.element.android.libraries.di.annotations.SessionCoroutineScope
 import io.element.android.libraries.matrix.api.MatrixClient
+import io.element.android.libraries.matrix.api.sync.SyncOrchestrator
 import io.element.android.libraries.matrix.api.sync.SyncState
 import io.element.android.services.appnavstate.api.AppForegroundStateService
 import kotlinx.coroutines.CoroutineName
@@ -28,21 +29,22 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import timber.log.Timber
-import javax.inject.Inject
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Observes the app state and network state to start/stop the sync service.
- */
-@SingleIn(SessionScope::class)
-class SyncOrchestrator @Inject constructor(
-    matrixClient: MatrixClient,
+class DefaultSyncOrchestrator @AssistedInject constructor(
+    @Assisted matrixClient: MatrixClient,
+    private val baseCoroutineScope: CoroutineScope = matrixClient.sessionCoroutineScope,
     private val appForegroundStateService: AppForegroundStateService,
     private val networkMonitor: NetworkMonitor,
-    @SessionCoroutineScope private val sessionCoroutineScope: CoroutineScope,
     private val dispatchers: CoroutineDispatchers,
-) {
+) : SyncOrchestrator {
+    @AssistedFactory
+    interface Factory {
+        fun create(matrixClient: MatrixClient): DefaultSyncOrchestrator
+    }
+
     private val syncService = matrixClient.syncService()
 
     private val initialSyncMutex = Mutex()
@@ -51,18 +53,25 @@ class SyncOrchestrator @Inject constructor(
 
     private val tag = "SyncOrchestrator"
 
+    private val started = AtomicBoolean(false)
+
     /**
      * Starting observing the app state and network state to start/stop the sync service.
      *
      * Before observing the state, a first attempt at starting the sync service will happen if it's not already running.
      */
     @OptIn(FlowPreview::class)
-    fun start() {
+    override fun start() {
+        if (!started.compareAndSet(false, true)) {
+            Timber.tag(tag).d("already started, exiting early")
+            return
+        }
+
         Timber.tag(tag).d("start observing the app and network state")
 
         if (syncService.syncState.value != SyncState.Running) {
             Timber.tag(tag).d("initial startSync")
-            sessionCoroutineScope.launch(dispatchers.io) {
+            baseCoroutineScope.launch(dispatchers.io) {
                 try {
                     initialSyncMutex.lock()
                     syncService.startSync()
@@ -75,7 +84,7 @@ class SyncOrchestrator @Inject constructor(
             }
         }
 
-        coroutineScope = CoroutineScope(sessionCoroutineScope.coroutineContext + CoroutineName(tag) + dispatchers.io)
+        coroutineScope = CoroutineScope(baseCoroutineScope.coroutineContext + CoroutineName(tag) + dispatchers.io)
 
         coroutineScope?.launch {
             // Wait until the initial sync is done, either successfully or failing
@@ -96,23 +105,23 @@ class SyncOrchestrator @Inject constructor(
                 if (syncState == SyncState.Running && (!isAppActive || !isNetworkAvailable)) {
                     // Don't stop the sync immediately, wait a bit to avoid starting/stopping the sync too often
                     delay(3.seconds)
-                    SyncObserverAction.StopSync
+                    SyncStateAction.StopSync
                 } else if (syncState != SyncState.Running && isAppActive && isNetworkAvailable) {
-                    SyncObserverAction.StartSync
+                    SyncStateAction.StartSync
                 } else {
-                    SyncObserverAction.NoOp
+                    SyncStateAction.NoOp
                 }
             }
                 .distinctUntilChanged()
                 .collect { action ->
                     when (action) {
-                        SyncObserverAction.StartSync -> {
+                        SyncStateAction.StartSync -> {
                             syncService.startSync()
                         }
-                        SyncObserverAction.StopSync -> {
+                        SyncStateAction.StopSync -> {
                             syncService.stopSync()
                         }
-                        SyncObserverAction.NoOp -> Unit
+                        SyncStateAction.NoOp -> Unit
                     }
                 }
         }
@@ -121,14 +130,18 @@ class SyncOrchestrator @Inject constructor(
     /**
      * Stop observing the app state and network state.
      */
-    fun stop() {
+    override fun stop() {
+        if (!started.compareAndSet(true, false)) {
+            Timber.tag(tag).d("already stopped, exiting early")
+            return
+        }
         Timber.tag(tag).d("stop observing the app and network state")
         coroutineScope?.cancel()
         coroutineScope = null
     }
 }
 
-private enum class SyncObserverAction {
+private enum class SyncStateAction {
     StartSync,
     StopSync,
     NoOp,
