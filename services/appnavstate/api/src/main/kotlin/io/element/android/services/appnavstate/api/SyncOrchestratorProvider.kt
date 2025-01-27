@@ -5,7 +5,7 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-package io.element.android.libraries.matrix.api.sync
+package io.element.android.services.appnavstate.api
 
 import io.element.android.libraries.matrix.api.core.SessionId
 
@@ -16,5 +16,5 @@ fun interface SyncOrchestratorProvider {
     /**
      * Get a [SyncOrchestrator] for the given [SessionId].
      */
-    fun get(sessionId: SessionId): SyncOrchestrator?
+    fun getSyncOrchestrator(sessionId: SessionId): SyncOrchestrator?
 }

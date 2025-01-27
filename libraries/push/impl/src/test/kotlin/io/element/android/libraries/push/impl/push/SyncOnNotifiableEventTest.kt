@@ -12,7 +12,6 @@ import com.google.common.truth.Truth.assertThat
 import io.element.android.libraries.featureflag.api.FeatureFlags
 import io.element.android.libraries.featureflag.test.FakeFeatureFlagService
 import io.element.android.libraries.matrix.api.MatrixClient
-import io.element.android.libraries.matrix.api.sync.SyncOrchestrator
 import io.element.android.libraries.matrix.api.sync.SyncState
 import io.element.android.libraries.matrix.api.timeline.MatrixTimelineItem
 import io.element.android.libraries.matrix.test.A_ROOM_ID
@@ -26,6 +25,7 @@ import io.element.android.libraries.matrix.test.timeline.FakeTimeline
 import io.element.android.libraries.matrix.test.timeline.anEventTimelineItem
 import io.element.android.libraries.push.impl.notifications.fixtures.aNotifiableCallEvent
 import io.element.android.libraries.push.impl.notifications.fixtures.aNotifiableMessageEvent
+import io.element.android.services.appnavstate.api.SyncOrchestrator
 import io.element.android.services.appnavstate.test.FakeAppForegroundStateService
 import io.element.android.tests.testutils.lambda.assert
 import io.element.android.tests.testutils.lambda.lambdaRecorder

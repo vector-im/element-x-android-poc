@@ -5,7 +5,7 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-package io.element.android.libraries.matrix.api.sync
+package io.element.android.services.appnavstate.api
 
 /**
  * Observes the app state and network state to start/stop the sync service.

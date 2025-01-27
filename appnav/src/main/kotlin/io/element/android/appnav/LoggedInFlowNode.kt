@@ -73,11 +73,11 @@ import io.element.android.libraries.matrix.api.core.RoomIdOrAlias
 import io.element.android.libraries.matrix.api.core.UserId
 import io.element.android.libraries.matrix.api.core.toRoomIdOrAlias
 import io.element.android.libraries.matrix.api.permalink.PermalinkData
-import io.element.android.libraries.matrix.api.sync.SyncOrchestratorProvider
 import io.element.android.libraries.matrix.api.verification.SessionVerificationRequestDetails
 import io.element.android.libraries.matrix.api.verification.SessionVerificationServiceListener
 import io.element.android.libraries.preferences.api.store.EnableNativeSlidingSyncUseCase
 import io.element.android.services.appnavstate.api.AppNavigationStateService
+import io.element.android.services.appnavstate.api.SyncOrchestratorProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -139,7 +139,7 @@ class LoggedInFlowNode @AssistedInject constructor(
     override fun onBuilt() {
         super.onBuilt()
 
-        syncOrchestratorProvider.get(sessionId = matrixClient.sessionId)?.start()
+        syncOrchestratorProvider.getSyncOrchestrator(sessionId = matrixClient.sessionId)?.start()
 
         lifecycle.subscribe(
             onCreate = {

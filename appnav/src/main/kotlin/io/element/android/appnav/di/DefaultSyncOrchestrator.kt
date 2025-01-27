@@ -14,9 +14,9 @@ import io.element.android.features.networkmonitor.api.NetworkMonitor
 import io.element.android.features.networkmonitor.api.NetworkStatus
 import io.element.android.libraries.core.coroutine.CoroutineDispatchers
 import io.element.android.libraries.matrix.api.MatrixClient
-import io.element.android.libraries.matrix.api.sync.SyncOrchestrator
 import io.element.android.libraries.matrix.api.sync.SyncState
 import io.element.android.services.appnavstate.api.AppForegroundStateService
+import io.element.android.services.appnavstate.api.SyncOrchestrator
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
