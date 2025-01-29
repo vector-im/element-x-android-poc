@@ -20,6 +20,7 @@ android {
 dependencies {
     implementation(libs.coroutines.core)
     implementation(libs.dagger)
+    implementation(projects.libraries.matrix.api)
     implementation(projects.libraries.core)
     implementation(projects.libraries.di)
     api(projects.features.networkmonitor.api)
