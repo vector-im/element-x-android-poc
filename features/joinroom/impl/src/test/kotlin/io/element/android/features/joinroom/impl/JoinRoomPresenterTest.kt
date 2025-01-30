@@ -26,6 +26,7 @@ import io.element.android.libraries.matrix.api.core.UserId
 import io.element.android.libraries.matrix.api.core.toRoomIdOrAlias
 import io.element.android.libraries.matrix.api.room.CurrentUserMembership
 import io.element.android.libraries.matrix.api.room.RoomType
+import io.element.android.libraries.matrix.api.room.join.JoinRule
 import io.element.android.libraries.matrix.api.room.preview.RoomPreviewInfo
 import io.element.android.libraries.matrix.test.AN_EXCEPTION
 import io.element.android.libraries.matrix.test.A_ROOM_ID
@@ -419,10 +420,8 @@ class JoinRoomPresenterTest {
                         numberOfJoinedMembers = 2,
                         roomType = RoomType.Room,
                         isHistoryWorldReadable = false,
-                        isJoined = false,
-                        isInvited = false,
-                        isPublic = true,
-                        canKnock = false,
+                        membership = null,
+                        joinRule = JoinRule.Public,
                     )
                 )
             }

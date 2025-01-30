@@ -56,8 +56,9 @@ internal fun InviteSenderViewPreview() = ElementPreview {
                 id = "@bob:example.com",
                 name = "Bob",
                 url = null,
-                size = AvatarSize.InviteSender
-            )
+                size = AvatarSize.InviteSender,
+            ),
+            membershipChangeReason = null,
         )
     )
 }

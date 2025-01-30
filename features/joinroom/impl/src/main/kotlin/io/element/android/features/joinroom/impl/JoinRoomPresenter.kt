@@ -42,6 +42,7 @@ import io.element.android.libraries.matrix.api.room.MatrixRoomInfo
 import io.element.android.libraries.matrix.api.room.RoomType
 import io.element.android.libraries.matrix.api.room.isDm
 import io.element.android.libraries.matrix.api.room.join.JoinRoom
+import io.element.android.libraries.matrix.api.room.join.JoinRule
 import io.element.android.libraries.matrix.api.room.preview.RoomPreviewInfo
 import io.element.android.libraries.matrix.ui.model.toInviteSender
 import kotlinx.coroutines.CoroutineScope
@@ -192,12 +193,11 @@ private fun RoomPreviewInfo.toContentState(): ContentState {
         isDm = false,
         roomType = roomType,
         roomAvatarUrl = avatarUrl,
-        joinAuthorisationStatus = when {
-            // Note when isInvited, roomInfo will be used, so if this happen, it will be temporary.
-            isInvited -> JoinAuthorisationStatus.IsInvited(null)
-            canKnock -> JoinAuthorisationStatus.CanKnock
-            isPublic -> JoinAuthorisationStatus.CanJoin
-            else -> JoinAuthorisationStatus.Unknown
+        joinAuthorisationStatus = when (membership) {
+            CurrentUserMembership.INVITED -> JoinAuthorisationStatus.IsInvited(null)
+            CurrentUserMembership.BANNED -> JoinAuthorisationStatus.IsBanned(null)
+            CurrentUserMembership.KNOCKED -> JoinAuthorisationStatus.IsKnocked
+            else -> joinRule.toJoinAuthorisationStatus()
         }
     )
 }
@@ -216,7 +216,7 @@ internal fun RoomDescription.toContentState(): ContentState {
         joinAuthorisationStatus = when (joinRule) {
             RoomDescription.JoinRule.KNOCK -> JoinAuthorisationStatus.CanKnock
             RoomDescription.JoinRule.PUBLIC -> JoinAuthorisationStatus.CanJoin
-            else -> JoinAuthorisationStatus.Unknown
+            else -> JoinAuthorisationStatus.CanJoin
         }
     )
 }
@@ -232,15 +232,28 @@ internal fun MatrixRoomInfo.toContentState(): ContentState {
         isDm = isDm,
         roomType = if (isSpace) RoomType.Space else RoomType.Room,
         roomAvatarUrl = avatarUrl,
-        joinAuthorisationStatus = when {
-            currentUserMembership == CurrentUserMembership.INVITED -> JoinAuthorisationStatus.IsInvited(
+        joinAuthorisationStatus = when (currentUserMembership) {
+            CurrentUserMembership.INVITED -> JoinAuthorisationStatus.IsInvited(
                 inviteSender = inviter?.toInviteSender()
             )
-            currentUserMembership == CurrentUserMembership.KNOCKED -> JoinAuthorisationStatus.IsKnocked
-            isPublic -> JoinAuthorisationStatus.CanJoin
-            else -> JoinAuthorisationStatus.Unknown
+            CurrentUserMembership.BANNED -> JoinAuthorisationStatus.IsBanned(
+                banSender = inviter?.toInviteSender()
+            )
+            CurrentUserMembership.KNOCKED -> JoinAuthorisationStatus.IsKnocked
+            else -> joinRule.toJoinAuthorisationStatus()
         }
     )
+}
+
+private fun JoinRule?.toJoinAuthorisationStatus(): JoinAuthorisationStatus {
+    return when (this) {
+        JoinRule.Knock,
+        is JoinRule.KnockRestricted -> JoinAuthorisationStatus.CanKnock
+        JoinRule.Invite,
+        JoinRule.Private -> JoinAuthorisationStatus.NeedInvite
+        is JoinRule.Restricted -> JoinAuthorisationStatus.Restricted
+        else -> JoinAuthorisationStatus.CanJoin
+    }
 }
 
 @VisibleForTesting

@@ -17,6 +17,7 @@ import io.element.android.libraries.matrix.api.core.RoomId
 import io.element.android.libraries.matrix.api.core.RoomIdOrAlias
 import io.element.android.libraries.matrix.api.room.RoomType
 import io.element.android.libraries.matrix.ui.model.InviteSender
+import java.util.Optional
 
 internal const val MAX_KNOCK_MESSAGE_LENGTH = 500
 
@@ -72,8 +73,11 @@ sealed interface ContentState {
 
 sealed interface JoinAuthorisationStatus {
     data class IsInvited(val inviteSender: InviteSender?) : JoinAuthorisationStatus
+    data class IsBanned(val banSender: InviteSender?) : JoinAuthorisationStatus
     data object IsKnocked : JoinAuthorisationStatus
     data object CanKnock : JoinAuthorisationStatus
     data object CanJoin : JoinAuthorisationStatus
+    data object NeedInvite : JoinAuthorisationStatus
+    data object Restricted : JoinAuthorisationStatus
     data object Unknown : JoinAuthorisationStatus
 }

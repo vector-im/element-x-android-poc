@@ -98,7 +98,32 @@ open class JoinRoomStateProvider : PreviewParameterProvider<JoinRoomState> {
                     name = "A knocked Room",
                     joinAuthorisationStatus = JoinAuthorisationStatus.IsKnocked
                 )
-            )
+            ),
+            aJoinRoomState(
+                contentState = aLoadedContentState(
+                    name = "A private room",
+                    joinAuthorisationStatus = JoinAuthorisationStatus.NeedInvite
+                )
+            ),
+            aJoinRoomState(
+                contentState = aLoadedContentState(
+                    name = "A banned room",
+                    joinAuthorisationStatus = JoinAuthorisationStatus.IsBanned(
+                        InviteSender(
+                            userId = UserId("@alice:domain"),
+                            displayName = "Alice",
+                            avatarData = AvatarData("alice", "Alice", size = AvatarSize.InviteSender),
+                            membershipChangeReason = "spamming"
+                        )
+                    ),
+                )
+            ),
+            aJoinRoomState(
+                contentState = aLoadedContentState(
+                    name = "A banned room",
+                    joinAuthorisationStatus = JoinAuthorisationStatus.Restricted,
+                )
+            ),
         )
 }
 
@@ -160,10 +185,12 @@ internal fun anInviteSender(
     userId: UserId = UserId("@bob:domain"),
     displayName: String = "Bob",
     avatarData: AvatarData = AvatarData(userId.value, displayName, size = AvatarSize.InviteSender),
+    membershipChangeReason: String? = null,
 ) = InviteSender(
     userId = userId,
     displayName = displayName,
     avatarData = avatarData,
+    membershipChangeReason = membershipChangeReason,
 )
 
 private val A_ROOM_ID = RoomId("!exa:matrix.org")
