@@ -284,6 +284,6 @@ private fun CharSequence.withFixedURLSpans(): CharSequence {
 @Suppress("USELESS_ELVIS")
 private fun String.withLinks(): CharSequence? {
     // Note: toSpannable() can return null when running unit tests
-    val spannable = withFixedURLSpans().toSpannable()
+    val spannable = withFixedURLSpans().toSpannable() ?: return null
     return spannable.takeIf { spannable.getSpans<URLSpan>(0, length).isNotEmpty() }
 }
