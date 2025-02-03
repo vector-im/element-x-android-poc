@@ -194,7 +194,8 @@ class PinnedMessagesBannerPresenterTest {
             networkMonitor = networkMonitor,
             featureFlagService = FakeFeatureFlagService(
                 initialState = mapOf(FeatureFlags.PinnedEvents.key to isFeatureEnabled)
-            )
+            ),
+            dispatchers = testCoroutineDispatchers(),
         )
         timelineProvider.launchIn(backgroundScope)
 
